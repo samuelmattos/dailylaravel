@@ -35,10 +35,25 @@ class DailyRoomController extends Controller
         return $response->json();
     }
 
+    public function listRecordings()
+    {
+        $response = Http::withToken(env('DAILY_API_KEY'))
+            ->get('https://api.daily.co/v1/recordings');
+
+        if ($response->successful()) {
+            return $response->json(); // Vai retornar uma lista com as gravações
+        }
+
+        return response()->json([
+            'error' => 'Unable to fetch recordings',
+            'status' => $response->status(),
+        ], $response->status());
+    }
+
     public function getRecording($meetingId)
     {
         $response = Http::withToken(env('DAILY_API_KEY'))
-            ->get("https://api.daily.co/v1/recordings/$meetingId");
+            ->get("https://api.daily.co/v1/recordings/$meetingId/access-link");
 
         return $response->json();
     }

@@ -11,3 +11,4 @@ Route::get('/user', function (Request $request) {
 // routes/api.php
 Route::post('/create-room', [DailyRoomController::class, 'createRoom']);
 Route::get('/recording/{meetingId}', [DailyRoomController::class, 'getRecording']);
+Route::get('/recording', [DailyRoomController::class, 'listRecordings']);

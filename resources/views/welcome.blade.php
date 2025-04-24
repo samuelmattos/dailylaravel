@@ -13,6 +13,13 @@
 </head>
 
 <body>
+    <div class="max-w-3xl my-6">
+        <h2 class="text-xl font-bold mb-4">Today's Recording</h2>
+        <div id="recordings-list" class="space-y-4 max-h-96 overflow-y-auto border rounded-lg p-4 bg-white shadow">
+            <p class="text-gray-500">Load Records...</p>
+        </div>
+    </div>
+
     <div class="controls flex gap-4 my-4">
         <button id="join-btn"
             class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition">
@@ -43,7 +50,6 @@
             </button>
         </div>
     </div>
-
     <div class="controls flex gap-4 my-4">
         <button id="toggle-camera"
             class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition"
@@ -87,6 +93,72 @@
 
     <script src="https://unpkg.com/@daily-co/daily-js"></script>
     <script>
+        async function loadTodayRecordings() {
+            const recordingsList = document.getElementById('recordings-list');
+            recordingsList.innerHTML = '<p class="text-gray-500">Carregando gravações...</p>';
+
+            try {
+                const response = await fetch('/api/recording');
+                const data = await response.json();
+
+                const today = new Date();
+                const todayDateStr = today.toISOString().split('T')[0];
+
+                const todayRecordings = data.data.filter(recording => {
+                    const recordingDate = new Date(recording.start_ts * 1000).toISOString().split('T')[0];
+                    return recordingDate === todayDateStr;
+                });
+
+                if (todayRecordings.length === 0) {
+                    recordingsList.innerHTML = '<p class="text-gray-500">Nenhuma gravação encontrada para hoje.</p>';
+                    return;
+                }
+
+                recordingsList.innerHTML = ''; // Limpa a lista
+
+                for (const recording of todayRecordings) {
+                    const item = document.createElement('div');
+                    item.className = 'p-4 border rounded-lg shadow-md bg-white';
+                    const recordingDate = new Date(recording.start_ts * 1000);
+
+                    item.innerHTML = `
+                <p class="font-semibold">Sala: ${recording.room_name}</p>
+                <p>Duração: ${(recording.duration / 60).toFixed(1)} min</p>
+                <p>Data: ${recordingDate.toLocaleString()}</p>
+            `;
+
+                    const downloadButton = document.createElement('button');
+                    downloadButton.className =
+                        'mt-2 inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition';
+                    downloadButton.textContent = 'Donwload';
+
+                    downloadButton.addEventListener('click', async () => {
+                        try {
+                            const res = await fetch(`/api/recording/${recording.id}`);
+                            const recordingData = await res.json();
+
+                            if (recordingData.download_link) {
+                                window.open(recordingData.download_link, '_blank');
+                            } else {
+                                alert('Gravação ainda não está disponível para download.');
+                            }
+                        } catch (error) {
+                            console.error('Erro ao buscar gravação:', error);
+                            alert('Erro ao tentar baixar a gravação.');
+                        }
+                    });
+
+                    item.appendChild(downloadButton);
+                    recordingsList.appendChild(item);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar gravações:', error);
+                recordingsList.innerHTML = '<p class="text-red-500">Erro ao carregar as gravações.</p>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadTodayRecordings);
+
         /**
          * Initializes a new instance of the `DailyCallManager` class, creating
          * a Daily.co call object and setting initial states for camera and
