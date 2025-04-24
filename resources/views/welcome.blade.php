@@ -67,6 +67,10 @@
             disabled>
             Start Screen Share
         </button>
+        <button id="blur-btn"
+            class="px-4 py-2 bg-teal-600 text-white font-semibold rounded-lg shadow-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition">
+            Blur
+        </button>
     </div>
 
     <div class="controls">
@@ -174,6 +178,28 @@
                 this.initialize();
             }
 
+            async enableBackgroundBlur() {
+                const videoTrack = this.call.participants().local.tracks.video?.persistentTrack;
+
+                if (!videoTrack) {
+                    console.error('Local video track not found.');
+                    return;
+                }
+
+                this.call.updateInputSettings({
+                    video: {
+                        processor: {
+                            type: 'background-blur',
+                            config: {
+                                strength: 0.9
+                            },
+                        },
+                    },
+                });
+
+                console.log('Background blur ativado!');
+            }
+
             /**
              * Performs initial setup of event listeners and UI component interactions.
              */
@@ -188,6 +214,8 @@
                 document
                     .getElementById('screen-share-btn')
                     .addEventListener('click', () => this.toggleScreenShare());
+                document.getElementById('blur-btn')
+                    .addEventListener('click', () => this.enableBackgroundBlur());
                 this.setupChat();
             }
 
