@@ -8,18 +8,19 @@ use Illuminate\Support\Facades\Http;
 
 class DailyRoomController extends Controller
 {
-    public function createRoom()
+    public function createRoom(Request $request)
     {
+        $apiKey = $request->input('apiKey') ?? env('DAILY_API_KEY');
         $roomName = 'demo-rom10';
 
-        $check = Http::withToken(env('DAILY_API_KEY'))
+        $check = Http::withToken($apiKey)
         ->get("https://api.daily.co/v1/rooms/{$roomName}");
 
         if ($check->status() === 200) {
             return $check->json(); // Reutiliza a sala
         }
 
-        $response = Http::withToken(env('DAILY_API_KEY'))
+        $response = Http::withToken($apiKey)
             ->post('https://api.daily.co/v1/rooms', [
                 'name' => $roomName,
                 'properties' => [
@@ -35,9 +36,10 @@ class DailyRoomController extends Controller
         return $response->json();
     }
 
-    public function listRecordings()
+    public function listRecordings(Request $request)
     {
-        $response = Http::withToken(env('DAILY_API_KEY'))
+        $apiKey = $request->input('apiKey') ?? env('DAILY_API_KEY');
+        $response = Http::withToken($apiKey)
             ->get('https://api.daily.co/v1/recordings');
 
         if ($response->successful()) {
@@ -50,9 +52,10 @@ class DailyRoomController extends Controller
         ], $response->status());
     }
 
-    public function getRecording($meetingId)
+    public function getRecording(Request $request, $meetingId)
     {
-        $response = Http::withToken(env('DAILY_API_KEY'))
+        $apiKey = $request->input('apiKey') ?? env('DAILY_API_KEY');
+        $response = Http::withToken($apiKey)
             ->get("https://api.daily.co/v1/recordings/$meetingId/access-link");
 
         return $response->json();

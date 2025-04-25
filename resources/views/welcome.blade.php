@@ -14,8 +14,17 @@
 
 <body>
     <div class="max-w-3xl my-6">
+        <h2 class="text-xl font-bold mb-4">Configure Daily API Key</h2>
+        <input id="daily-api-key" name="daily_api_key" type="text" placeholder="Enter Daily API Key"
+            class="space-y-4 overflow-y-auto border rounded-lg p-4 bg-white shadow w-xl" />
+    </div>
+    <div class="max-w-3xl my-6">
         <h2 class="text-xl font-bold mb-4">Today's Recording</h2>
-        <div id="recordings-list" class="space-y-4 max-h-96 overflow-y-auto border rounded-lg p-4 bg-white shadow">
+        <button type="button" id="load-recordings-btn"
+            class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition">
+            Load Recording
+        </button>
+        <div id="recordings-list" class="space-y-4 max-h-96 overflow-y-auto border rounded-lg p-4 bg-white shadow mt-4">
             <p class="text-gray-500">Load Records...</p>
         </div>
     </div>
@@ -102,7 +111,8 @@
             recordingsList.innerHTML = '<p class="text-gray-500">Carregando gravações...</p>';
 
             try {
-                const response = await fetch('/api/recording');
+                var dailyApiKey = document.getElementById('daily-api-key').value;
+                const response = await fetch(`/api/recording/?apiKey=${dailyApiKey}`);
                 const data = await response.json();
 
                 const today = new Date();
@@ -138,7 +148,7 @@
 
                     downloadButton.addEventListener('click', async () => {
                         try {
-                            const res = await fetch(`/api/recording/${recording.id}`);
+                            const res = await fetch(`/api/recording/${recording.id}?apiKey=${dailyApiKey}`);
                             const recordingData = await res.json();
 
                             if (recordingData.download_link) {
@@ -160,8 +170,10 @@
                 recordingsList.innerHTML = '<p class="text-red-500">Erro ao carregar as gravações.</p>';
             }
         }
-
-        document.addEventListener('DOMContentLoaded', loadTodayRecordings);
+        document
+            .getElementById('load-recordings-btn')
+            .addEventListener('click', () => loadTodayRecordings());
+        // document.addEventListener('DOMContentLoaded', loadTodayRecordings);
 
         /**
          * Initializes a new instance of the `DailyCallManager` class, creating
@@ -871,8 +883,15 @@
             document
                 .getElementById('join-btn')
                 .addEventListener('click', async function() {
+                    var dailyApiKey = document.getElementById('daily-api-key').value;
                     const res = await fetch('/api/create-room', {
-                        method: 'POST'
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            apiKey: dailyApiKey,
+                        }),
                     });
                     const {
                         url
