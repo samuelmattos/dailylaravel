@@ -36,6 +36,51 @@ class DailyRoomController extends Controller
         return $response->json();
     }
 
+
+    public function startRecording(Request $request)
+    {
+        $roomName = 'demo-rom10';
+        $apiKey = $request->input('apiKey') ?? env('DAILY_API_KEY');
+        $response = Http::withToken($apiKey)
+            ->post("https://api.daily.co/v1/rooms/{$roomName}/recordings/start", [
+                'width' => 854,
+                'height' => 480,
+                'fps' => 24,
+                'videoBitrate' => 1000,
+                'audioBitrate' => 64,
+                'layout' => [
+                    'preset' => 'default'
+                ]
+            ]);
+        $data = $response->json();
+        if ($response->successful()) {
+            // Aqui você pode salvar $data['id'] ou outros campos no banco, se quiser
+            return response()->json($data);
+        }
+        return response()->json(['error' => $data], $response->status());
+    }
+
+    public function stopRecording(Request $request)
+    {
+        $roomName = 'demo-rom10';
+        $apiKey = $request->input('apiKey') ?? env('DAILY_API_KEY');
+        $response = Http::withToken($apiKey)
+            ->withHeaders([
+                'Content-Type' => 'application/json',
+            ])
+            ->withBody(json_encode((object) []), 'application/json')
+            ->post("https://api.daily.co/v1/rooms/{$roomName}/recordings/stop");
+
+        $data = $response->json();
+        if ($response->successful()) {
+
+            // Aqui você pode salvar $data['id'] ou outros campos no banco, se quiser
+            return response()->json($data);
+        }
+
+        return response()->json(['error' => $data], $response->status());
+    }
+
     public function listRecordings(Request $request)
     {
         $apiKey = $request->input('apiKey') ?? env('DAILY_API_KEY');

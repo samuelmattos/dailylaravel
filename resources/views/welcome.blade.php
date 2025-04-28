@@ -514,31 +514,42 @@
                     this.isRecording = false; // Define o status inicial da gravação
 
                     document.getElementById('record-btn').addEventListener('click', async () => {
+                        var dailyApiKey = document.getElementById('daily-api-key').value;
                         if (!this.isRecording) {
                             try {
-                                await this.call.startRecording({
-                                    width: 854,
-                                    height: 480,
-                                    fps: 24,
-                                    videoBitrate: 1000,
-                                    audioBitrate: 64,
-                                    layout: {
-                                        preset: 'default',
-                                        max_cam_streams: 5,
+                                const response = await fetch(`/api/recording/start`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
                                     },
+                                    body: JSON.stringify({
+                                        apiKey: dailyApiKey,
+                                    }),
                                 });
+                                const data = await response.json();
+                                console.log('Gravação iniciada:', data);
                                 this.isRecording = true;
                                 document.getElementById('record-btn').textContent = 'Stop Recording';
-                            } catch (e) {
-                                console.error('Error starting recording:', e);
+                            } catch (error) {
+                                console.error('Erro ao iniciar gravação:', error);
                             }
                         } else {
                             try {
-                                await this.call.stopRecording();
+                                const response = await fetch(`/api/recording/stop`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        apiKey: dailyApiKey,
+                                    }),
+                                });
+                                const data = await response.json();
+                                console.log('Gravação parada:', data);
                                 this.isRecording = false;
-                                document.getElementById('record-btn').textContent = 'Record';
-                            } catch (e) {
-                                console.error('Error stopping recording:', e);
+                                document.getElementById('record-btn').textContent = 'Start Recording';
+                            } catch (error) {
+                                console.error('Erro ao parar gravação:', error);
                             }
                         }
                     });

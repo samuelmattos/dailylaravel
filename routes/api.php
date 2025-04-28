@@ -12,3 +12,6 @@ Route::get('/user', function (Request $request) {
 Route::post('/create-room', [DailyRoomController::class, 'createRoom']);
 Route::get('/recording/{meetingId}', [DailyRoomController::class, 'getRecording']);
 Route::get('/recording', [DailyRoomController::class, 'listRecordings']);
+Route::post('/recording/start', [DailyRoomController::class, 'startRecording']);
+Route::post('/recording/stop', [DailyRoomController::class, 'stopRecording']);
+
