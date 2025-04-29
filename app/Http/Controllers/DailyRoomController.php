@@ -54,8 +54,7 @@ class DailyRoomController extends Controller
             ]);
         $data = $response->json();
         if ($response->successful()) {
-            // Aqui você pode salvar $data['id'] ou outros campos no banco, se quiser
-            return response()->json($data);
+            return response()->json($data['recordingId'] );
         }
         return response()->json(['error' => $data], $response->status());
     }
