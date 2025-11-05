@@ -29,6 +29,18 @@
         </div>
     </div>
 
+    <div class="max-w-3xl my-6">
+        <h2 class="text-xl font-bold mb-4">Transcripts</h2>
+        <button type="button" id="load-transcripts-btn"
+            class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition">
+            Load Transcripts
+        </button>
+        <div id="transcripts-list"
+            class="space-y-4 max-h-96 overflow-y-auto border rounded-lg p-4 bg-white shadow mt-4">
+            <p class="text-gray-500">Load Transcripts...</p>
+        </div>
+    </div>
+
     <div class="controls flex gap-4 my-4">
         <button id="join-btn"
             class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition">
@@ -186,6 +198,82 @@
             .getElementById('load-recordings-btn')
             .addEventListener('click', () => loadTodayRecordings());
         // document.addEventListener('DOMContentLoaded', loadTodayRecordings);
+
+        async function loadTodayTranscripts() {
+            const transcriptsList = document.getElementById('transcripts-list');
+            transcriptsList.innerHTML = '<p class="text-gray-500">Carregando transcrições...</p>';
+
+            try {
+                var dailyApiKey = document.getElementById('daily-api-key').value;
+                const response = await fetch(`/api/transcripts?apiKey=${dailyApiKey}`);
+                const data = await response.json();
+
+                // Como não temos created_at, vamos mostrar todas as transcrições
+                // Se quiser filtrar por data, você pode usar outros campos ou remover o filtro
+                const transcripts = data.data || [];
+
+                if (transcripts.length === 0) {
+                    transcriptsList.innerHTML =
+                        '<p class="text-gray-500">Nenhuma transcrição encontrada.</p>';
+                    return;
+                }
+
+                transcriptsList.innerHTML = ''; // Limpa a lista
+
+                for (const transcript of transcripts) {
+                    const item = document.createElement('div');
+                    item.className = 'p-4 border rounded-lg shadow-md bg-white';
+
+                    item.innerHTML = `
+                <p class="font-semibold">Sala: ${transcript.roomName}</p>
+                <p>Status: ${transcript.status}</p>
+                <p>Duração: ${transcript.duration} segundos</p>
+                <p>VTT Disponível: ${transcript.isVttAvailable ? 'Sim' : 'Não'}</p>
+                <p>ID: ${transcript.transcriptId}</p>
+            `;
+
+                    const downloadButton = document.createElement('button');
+                    downloadButton.className =
+                        'mt-2 inline-block px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition';
+                    downloadButton.textContent = 'Download VTT';
+
+                    // Só habilita o botão se o VTT estiver disponível
+                    if (!transcript.isVttAvailable) {
+                        downloadButton.disabled = true;
+                        downloadButton.className =
+                            'mt-2 inline-block px-4 py-2 bg-gray-400 text-white rounded cursor-not-allowed';
+                        downloadButton.textContent = 'VTT Não Disponível';
+                    }
+
+                    downloadButton.addEventListener('click', async () => {
+                        try {
+                            const res = await fetch(
+                                `/api/transcript/${transcript.transcriptId}?apiKey=${dailyApiKey}`);
+                            const transcriptData = await res.json();
+
+                            if (transcriptData.link) {
+                                window.open(transcriptData.link, '_blank');
+                            } else {
+                                alert('Transcrição ainda não está disponível para download.');
+                            }
+                        } catch (error) {
+                            console.error('Erro ao buscar transcrição:', error);
+                            alert('Erro ao tentar baixar a transcrição.');
+                        }
+                    });
+
+                    item.appendChild(downloadButton);
+                    transcriptsList.appendChild(item);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar transcrições:', error);
+                transcriptsList.innerHTML = '<p class="text-red-500">Erro ao carregar as transcrições.</p>';
+            }
+        }
+
+        document
+            .getElementById('load-transcripts-btn')
+            .addEventListener('click', () => loadTodayTranscripts());
 
         /**
          * Initializes a new instance of the `DailyCallManager` class, creating

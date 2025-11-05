@@ -192,4 +192,29 @@ class DailyRoomController extends Controller
 
         return $response->json();
     }
+
+    public function listTranscripts(Request $request)
+    {
+        $apiKey = $request->input('apiKey') ?? env('DAILY_API_KEY');
+        $response = Http::withToken($apiKey)
+            ->get('https://api.daily.co/v1/transcript');
+
+        if ($response->successful()) {
+            return $response->json(); // Vai retornar uma lista com as transcrições
+        }
+
+        return response()->json([
+            'error' => 'Unable to fetch transcripts',
+            'status' => $response->status(),
+        ], $response->status());
+    }
+
+    public function getTranscript(Request $request, $transcriptId)
+    {
+        $apiKey = $request->input('apiKey') ?? env('DAILY_API_KEY');
+        $response = Http::withToken($apiKey)
+            ->get("https://api.daily.co/v1/transcript/$transcriptId/access-link");
+
+        return $response->json();
+    }
 }
