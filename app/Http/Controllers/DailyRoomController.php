@@ -41,6 +41,8 @@ class DailyRoomController extends Controller
     {
         $roomName = 'demo-rom10';
         $apiKey = $request->input('apiKey') ?? env('DAILY_API_KEY');
+
+        // Inicia a gravação
         $response = Http::withToken($apiKey)
             ->post("https://api.daily.co/v1/rooms/{$roomName}/recordings/start", [
                 'width' => 854,
@@ -52,9 +54,24 @@ class DailyRoomController extends Controller
                     'preset' => 'default'
                 ]
             ]);
+
         $data = $response->json();
         if ($response->successful()) {
-            return response()->json($data['recordingId'] );
+            // Inicia a transcrição em português do Brasil
+            $transcriptionResponse = Http::withToken($apiKey)
+                ->post("https://api.daily.co/v1/rooms/{$roomName}/transcription/start", [
+                    'language' => 'pt-BR',
+                    'model' => 'nova-3',
+                    'punctuate' => true,
+                    'profanity_filter' => false
+                ]);
+
+            $transcriptionData = $transcriptionResponse->json();
+
+            return response()->json([
+                'recordingId' => $data['recordingId'],
+                'transcription' => $transcriptionData
+            ]);
         }
         return response()->json(['error' => $data], $response->status());
     }
@@ -63,6 +80,8 @@ class DailyRoomController extends Controller
     {
         $roomName = 'demo-rom10';
         $apiKey = $request->input('apiKey') ?? env('DAILY_API_KEY');
+
+        // Para a gravação
         $response = Http::withToken($apiKey)
             ->withHeaders([
                 'Content-Type' => 'application/json',
@@ -72,9 +91,21 @@ class DailyRoomController extends Controller
 
         $data = $response->json();
         if ($response->successful()) {
+            // Para a transcrição
+            $transcriptionResponse = Http::withToken($apiKey)
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                ])
+                ->withBody(json_encode((object) []), 'application/json')
+                ->post("https://api.daily.co/v1/rooms/{$roomName}/transcription/stop");
+
+            $transcriptionData = $transcriptionResponse->json();
 
             // Aqui você pode salvar $data['id'] ou outros campos no banco, se quiser
-            return response()->json($data);
+            return response()->json([
+                'recording' => $data,
+                'transcription' => $transcriptionData
+            ]);
         }
 
         return response()->json(['error' => $data], $response->status());
@@ -101,6 +132,37 @@ class DailyRoomController extends Controller
         $apiKey = $request->input('apiKey') ?? env('DAILY_API_KEY');
         $response = Http::withToken($apiKey)
             ->get("https://api.daily.co/v1/recordings/$meetingId/access-link");
+
+        return $response->json();
+    }
+
+    public function startTranscription(Request $request)
+    {
+        $roomName = 'demo-rom10';
+        $apiKey = $request->input('apiKey') ?? env('DAILY_API_KEY');
+
+        $response = Http::withToken($apiKey)
+            ->post("https://api.daily.co/v1/rooms/{$roomName}/transcription/start", [
+                'language' => 'pt-BR',
+                'model' => 'nova-3',
+                'punctuate' => true,
+                'profanity_filter' => false
+            ]);
+
+        return $response->json();
+    }
+
+    public function stopTranscription(Request $request)
+    {
+        $roomName = 'demo-rom10';
+        $apiKey = $request->input('apiKey') ?? env('DAILY_API_KEY');
+
+        $response = Http::withToken($apiKey)
+            ->withHeaders([
+                'Content-Type' => 'application/json',
+            ])
+            ->withBody(json_encode((object) []), 'application/json')
+            ->post("https://api.daily.co/v1/rooms/{$roomName}/transcription/stop");
 
         return $response->json();
     }

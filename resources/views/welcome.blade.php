@@ -46,6 +46,12 @@
             disabled>
             Record
         </button>
+
+        <button id="transcription-btn"
+            class="px-4 py-2 bg-orange-500 text-white font-semibold rounded-lg shadow-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 transition"
+            disabled>
+            Start Transcription
+        </button>
     </div>
     <div class="my-6 max-w-md">
         <h2 class="text-lg font-bold mb-2">Chat</h2>
@@ -96,6 +102,7 @@
         <div id="mic-state">Mic: Off</div>
         <div id="participant-count">Participants: 0</div>
         <div id="active-speaker">Active Speaker: None</div>
+        <div id="transcription-status">Transcription: Off</div>
     </div>
 
     <div id="videos"></div>
@@ -186,6 +193,7 @@
                 this.call = Daily.createCallObject();
                 this.currentRoomUrl = null;
                 this.isRecording = false; // Define the initial recording status
+                this.isTranscribing = false; // Define the initial transcription status
                 this.isScreenSharing = false;
                 this.initialize();
             }
@@ -330,6 +338,7 @@
                 // Enable the leave button
                 document.getElementById('leave-btn').disabled = false;
                 document.getElementById('record-btn').disabled = false;
+                document.getElementById('transcription-btn').disabled = false;
 
                 // Enable the toggle camera and mic buttons and selectors
                 document.getElementById('toggle-camera').disabled = false;
@@ -362,6 +371,7 @@
                 // Update the join and leave button states
                 document.getElementById('leave-btn').disabled = true;
                 document.getElementById('record-btn').disabled = true;
+                document.getElementById('transcription-btn').disabled = true;
                 document.getElementById('join-btn').disabled = false;
 
                 // Disable the toggle camera and mic buttons
@@ -379,6 +389,7 @@
                 // Update the call state in the UI
                 document.getElementById('camera-state').textContent = 'Camera: Off';
                 document.getElementById('mic-state').textContent = 'Mic: Off';
+                document.getElementById('transcription-status').textContent = 'Transcription: Off';
                 document.getElementById(
                     'participant-count'
                 ).textContent = `Participants: 0`;
@@ -512,7 +523,9 @@
                     // Join the room
                     await this.call.join(joinOptions);
                     this.isRecording = false; // Define o status inicial da gravação
+                    this.isTranscribing = false; // Define o status inicial da transcrição
 
+                    // Event listener para o botão de gravação
                     document.getElementById('record-btn').addEventListener('click', async () => {
                         var dailyApiKey = document.getElementById('daily-api-key').value;
                         if (!this.isRecording) {
@@ -550,6 +563,62 @@
                                 document.getElementById('record-btn').textContent = 'Start Recording';
                             } catch (error) {
                                 console.error('Erro ao parar gravação:', error);
+                            }
+                        }
+                    });
+
+                    // Event listener para o botão de transcrição
+                    document.getElementById('transcription-btn').addEventListener('click', async () => {
+                        var dailyApiKey = document.getElementById('daily-api-key').value;
+                        if (!this.isTranscribing) {
+                            try {
+                                const response = await fetch(`/api/transcription/start`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        apiKey: dailyApiKey,
+                                    }),
+                                });
+                                const data = await response.json();
+                                console.log('Transcrição iniciada:', data);
+                                this.isTranscribing = true;
+                                document.getElementById('transcription-btn').textContent =
+                                    'Stop Transcription';
+                                document.getElementById('transcription-btn').classList.remove(
+                                    'bg-orange-500', 'hover:bg-orange-600');
+                                document.getElementById('transcription-btn').classList.add('bg-red-500',
+                                    'hover:bg-red-600');
+                                document.getElementById('transcription-status').textContent =
+                                    'Transcription: On';
+                            } catch (error) {
+                                console.error('Erro ao iniciar transcrição:', error);
+                            }
+                        } else {
+                            try {
+                                const response = await fetch(`/api/transcription/stop`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        apiKey: dailyApiKey,
+                                    }),
+                                });
+                                const data = await response.json();
+                                console.log('Transcrição parada:', data);
+                                this.isTranscribing = false;
+                                document.getElementById('transcription-btn').textContent =
+                                    'Start Transcription';
+                                document.getElementById('transcription-btn').classList.remove('bg-red-500',
+                                    'hover:bg-red-600');
+                                document.getElementById('transcription-btn').classList.add('bg-orange-500',
+                                    'hover:bg-orange-600');
+                                document.getElementById('transcription-status').textContent =
+                                    'Transcription: Off';
+                            } catch (error) {
+                                console.error('Erro ao parar transcrição:', error);
                             }
                         }
                     });

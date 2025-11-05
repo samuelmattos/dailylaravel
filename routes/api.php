@@ -15,3 +15,6 @@ Route::get('/recording', [DailyRoomController::class, 'listRecordings']);
 Route::post('/recording/start', [DailyRoomController::class, 'startRecording']);
 Route::post('/recording/stop', [DailyRoomController::class, 'stopRecording']);
 
+// Rotas específicas para transcrição
+Route::post('/transcription/start', [DailyRoomController::class, 'startTranscription']);
+Route::post('/transcription/stop', [DailyRoomController::class, 'stopTranscription']);
