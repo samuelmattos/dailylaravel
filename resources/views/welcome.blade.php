@@ -52,6 +52,11 @@
             disabled>
             Start Transcription
         </button>
+
+        <button id="join-with-auto-transcription-btn"
+            class="px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition">
+            Join with Auto-Transcription
+        </button>
     </div>
     <div class="my-6 max-w-md">
         <h2 class="text-lg font-bold mb-2">Chat</h2>
@@ -977,6 +982,42 @@
                         url
                     } = await res.json();
                     await dailyCallManager.joinRoom(url);
+                });
+
+            // Bind the join with auto-transcription action to the button.
+            document
+                .getElementById('join-with-auto-transcription-btn')
+                .addEventListener('click', async function() {
+                    var dailyApiKey = document.getElementById('daily-api-key').value;
+
+                    // Primeiro cria a sala
+                    const roomRes = await fetch('/api/create-room', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            apiKey: dailyApiKey,
+                        }),
+                    });
+                    const roomData = await roomRes.json();
+
+                    // Depois cria um meeting token com auto-transcrição
+                    const tokenRes = await fetch('/api/meeting-token', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            apiKey: dailyApiKey,
+                            user_name: 'Admin User'
+                        }),
+                    });
+                    const tokenData = await tokenRes.json();
+
+                    // Junta na sala usando o meeting token
+                    await dailyCallManager.joinRoom(roomData.url, tokenData.token);
+                    console.log('Joined with auto-transcription enabled!');
                 });
 
             // Bind the leave call action to the leave button.

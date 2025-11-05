@@ -18,3 +18,6 @@ Route::post('/recording/stop', [DailyRoomController::class, 'stopRecording']);
 // Rotas específicas para transcrição
 Route::post('/transcription/start', [DailyRoomController::class, 'startTranscription']);
 Route::post('/transcription/stop', [DailyRoomController::class, 'stopTranscription']);
+
+// Rota para criar meeting token com auto-transcrição
+Route::post('/meeting-token', [DailyRoomController::class, 'createMeetingToken']);

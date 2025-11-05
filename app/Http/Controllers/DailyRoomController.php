@@ -11,7 +11,7 @@ class DailyRoomController extends Controller
     public function createRoom(Request $request)
     {
         $apiKey = $request->input('apiKey') ?? env('DAILY_API_KEY');
-        $roomName = 'demo-rom10';
+        $roomName = 'demo-rom11';
 
         $check = Http::withToken($apiKey)
         ->get("https://api.daily.co/v1/rooms/{$roomName}");
@@ -29,7 +29,14 @@ class DailyRoomController extends Controller
                     'start_video_off' => false,
                     'start_audio_off' => false,
                     'enable_chat' => true,
-                    'enable_screenshare' => true
+                    'enable_screenshare' => true,
+                    'enable_transcription_storage' => true,
+                    'auto_transcription_settings' => [
+                        'language' => 'pt-BR',
+                        'model' => 'nova-3',
+                        'punctuate' => true,
+                        'profanity_filter' => false
+                    ]
                 ],
             ]);
 
@@ -39,7 +46,7 @@ class DailyRoomController extends Controller
 
     public function startRecording(Request $request)
     {
-        $roomName = 'demo-rom10';
+        $roomName = 'demo-rom11';
         $apiKey = $request->input('apiKey') ?? env('DAILY_API_KEY');
 
         // Inicia a gravação
@@ -78,7 +85,7 @@ class DailyRoomController extends Controller
 
     public function stopRecording(Request $request)
     {
-        $roomName = 'demo-rom10';
+        $roomName = 'demo-rom11';
         $apiKey = $request->input('apiKey') ?? env('DAILY_API_KEY');
 
         // Para a gravação
@@ -138,7 +145,7 @@ class DailyRoomController extends Controller
 
     public function startTranscription(Request $request)
     {
-        $roomName = 'demo-rom10';
+        $roomName = 'demo-rom11';
         $apiKey = $request->input('apiKey') ?? env('DAILY_API_KEY');
 
         $response = Http::withToken($apiKey)
@@ -154,7 +161,7 @@ class DailyRoomController extends Controller
 
     public function stopTranscription(Request $request)
     {
-        $roomName = 'demo-rom10';
+        $roomName = 'demo-rom11';
         $apiKey = $request->input('apiKey') ?? env('DAILY_API_KEY');
 
         $response = Http::withToken($apiKey)
@@ -163,6 +170,25 @@ class DailyRoomController extends Controller
             ])
             ->withBody(json_encode((object) []), 'application/json')
             ->post("https://api.daily.co/v1/rooms/{$roomName}/transcription/stop");
+
+        return $response->json();
+    }
+
+    public function createMeetingToken(Request $request)
+    {
+        $roomName = 'demo-rom11';
+        $apiKey = $request->input('apiKey') ?? env('DAILY_API_KEY');
+
+        $response = Http::withToken($apiKey)
+            ->post('https://api.daily.co/v1/meeting-tokens', [
+                'properties' => [
+                    'room_name' => $roomName,
+                    'is_owner' => true,
+                    'auto_start_transcription' => true,
+                    'user_name' => $request->input('user_name', 'Admin'),
+                    'exp' => time() + (24 * 60 * 60), // Token válido por 24 horas
+                ]
+            ]);
 
         return $response->json();
     }
